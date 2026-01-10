@@ -5,7 +5,12 @@ import time
 
 class TwitterPublisher(BasePublisher):
     def publish(self, content: dict) -> str:
-        state_path = Config.PROMOBOT_HOME / "secrets/twitter_state.json"
+        # --- SAFETY CHECK ---
+        if len(content["body"]) > 280:
+            logger.error(f"❌ Tweet too long ({len(content['body'])} chars). Skipping to avoid ban.")
+            return None
+
+        state_path = Config.TWITTER_STATE_PATH
         
         with sync_playwright() as p:
             logger.info("🐦 Launching X (Twitter)...")
@@ -28,14 +33,13 @@ class TwitterPublisher(BasePublisher):
             # Click Post
             logger.info("👆 Clicking Post...")
             # X changes button text often ("Post", "Tweet", "Reply")
-            # We look for the blue button in the dialog
             post_btn = page.locator("button[data-testid='tweetButton']").first
             
             if post_btn.is_visible():
                 post_btn.click()
                 logger.info("✅ Tweet sent!")
                 time.sleep(3)
-                return "https://x.com/home" # Can't easily get exact link without complex scraping
+                return "https://x.com/home" 
             else:
                 logger.error("❌ Tweet button not found!")
                 return None

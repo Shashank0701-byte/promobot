@@ -5,7 +5,7 @@ import time
 
 class PeerlistPublisher(BasePublisher):
     def publish(self, content: dict) -> str:
-        state_path = Config.PROMOBOT_HOME / "secrets/peerlist_state.json"
+        state_path = Config.PEERLIST_STATE_PATH
         
         with sync_playwright() as p:
             logger.info("🟢 Launching Peerlist...")
@@ -13,26 +13,40 @@ class PeerlistPublisher(BasePublisher):
             context = browser.new_context(storage_state=state_path)
             page = context.new_page()
 
-            # Go to the scroll (feed)
             page.goto("https://peerlist.io/scroll")
-            time.sleep(4)
+            time.sleep(5) # Give it time to load
 
-            # Click "What are you working on?" input
             logger.info("✍️ Finding input box...")
-            # Peerlist usually has a placeholder div or textarea
             try:
-                page.get_by_placeholder("What are you working on?").click()
-                time.sleep(1)
+                # STRATEGY 1: Look for the specific "Write Article" button
+                write_btn = page.get_by_role("button", name="Write Article")
+                
+                # STRATEGY 2: Look for the placeholder text "Ask a question"
+                ask_input = page.get_by_placeholder("Ask a question", exact=False)
+
+                if write_btn.is_visible():
+                    write_btn.click()
+                elif ask_input.is_visible():
+                    ask_input.click()
+                else:
+                    # Fallback: Click the generic container
+                    page.locator("div[class*='create-post']").first.click()
+
+                time.sleep(2)
+                
+                # Type the content
                 page.keyboard.insert_text(content["body"])
                 time.sleep(2)
                 
-                # Click Post
+                # Click Post (Looking for Green button or specific text)
                 logger.info("👆 Clicking Post...")
-                page.get_by_role("button", name="Post").click()
+                post_btn = page.locator("button.bg-green-500").or_(page.get_by_role("button", name="Post"))
+                post_btn.first.click()
                 
                 logger.info("✅ Posted to Peerlist!")
                 time.sleep(3)
                 return "https://peerlist.io/scroll"
+
             except Exception as e:
                 logger.error(f"❌ Failed Peerlist post: {e}")
                 return None

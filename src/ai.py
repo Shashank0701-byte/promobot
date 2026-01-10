@@ -1,5 +1,6 @@
 import requests
 import json
+import time
 from src.config import Config, logger
 
 class AIEngine:
@@ -17,7 +18,7 @@ class AIEngine:
         """
         logger.info(f"🧠 Asking Gemini to rewrite draft for {platform}...")
 
-        # 1. Construct the Prompt (The "System Design" of AI)
+        # 1. Construct the Prompt
         prompt = self._build_prompt(draft, platform)
 
         # 2. Build Payload
@@ -27,48 +28,61 @@ class AIEngine:
             }]
         }
 
-        # 3. Fire Request
-        try:
-            url = f"{self.BASE_URL}?key={Config.GEMINI_API_KEY}"
-            response = requests.post(url, json=payload)
-            response.raise_for_status()
-            
-            # 4. Parse Response (Safely)
-            data = response.json()
-            generated_text = data['candidates'][0]['content']['parts'][0]['text']
-            
-            return generated_text.strip()
+        # 3. Fire Request with RETRY LOGIC
+        url = f"{self.BASE_URL}?key={Config.GEMINI_API_KEY}"
+        
+        for attempt in range(3):
+            try:
+                response = requests.post(url, json=payload)
+                
+                # Handle Rate Limiting (429)
+                if response.status_code == 429:
+                    wait_time = (attempt + 1) * 5
+                    logger.warning(f"⚠️ Rate Limit Hit (429). Waiting {wait_time}s...")
+                    time.sleep(wait_time)
+                    continue
 
-        except Exception as e:
-            logger.error(f"❌ AI Brain Freeze: {e}")
-            # Fallback: If AI fails, just return the original draft so we don't crash
-            return draft
+                response.raise_for_status()
+                
+                # 4. Parse Response
+                data = response.json()
+                generated_text = data['candidates'][0]['content']['parts'][0]['text']
+                return generated_text.strip()
+
+            except Exception as e:
+                logger.error(f"❌ AI Attempt {attempt+1} failed: {e}")
+                time.sleep(2)
+
+        # Fallback if all attempts fail
+        logger.error("💀 AI is dead. Using generic fallback.")
+        return "Check out my new project! It's open source. #IndieHacker #Python"
 
     def _build_prompt(self, draft: str, platform: str) -> str:
         if platform == "devto":
             return (
                 "You are a technical editor. Rewrite this as a Dev.to article (Markdown). "
                 "Title starts with '# '. Technical and tutorial tone.\n\n"
-                f"ORIGINAL:\n{draft}"
+                f"ORIGINAL:\n{draft[:2000]}"
             )
         elif platform == "reddit":
             return (
                 "Rewrite this for Reddit (r/SideProject). Casual, humble, 'I' statements. "
                 "Under 200 words. NO LINKS allowed in text.\n\n"
-                f"ORIGINAL:\n{draft}"
+                f"ORIGINAL:\n{draft[:2000]}"
             )
         elif platform == "twitter":
             return (
-                "Rewrite this as a viral Tweet. Short, punchy, under 280 characters. "
-                "Use 2-3 relevant hashtags. Emojis allowed. NO LINKS (I will add it later).\n\n"
-                f"ORIGINAL:\n{draft}"
+                "Rewrite this as a Tweet. "
+                "CRITICAL RULE: Total length MUST be under 200 characters. "
+                "Do not use the full 280 limit. "
+                "Use 2-3 hashtags. No links.\n\n"
+                f"ORIGINAL:\n{draft[:2000]}"
             )
         elif platform == "peerlist":
             return (
                 "Rewrite this for Peerlist.io. Tone: 'Maker/Indie Hacker'. "
-                "Professional but enthusiastic. Focus on 'shipping' and 'building'. "
                 "Short paragraph format. NO LINKS.\n\n"
-                f"ORIGINAL:\n{draft}"
+                f"ORIGINAL:\n{draft[:2000]}"
             )
         else:
-            return f"Rewrite this text:\n{draft}"
+            return f"Rewrite this text:\n{draft[:2000]}"
