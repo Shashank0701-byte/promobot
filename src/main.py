@@ -1,36 +1,43 @@
 # src/main.py
-from src.publishers.devto import DevtoPublisher
+from src.database import SessionLocal
+from src.models import Campaign, Post
+from src.tasks import publish_post_task
+import time
 
 def main():
-    # 1. Define the content (In Phase 2, this comes from the DB/Streamlit)
-    post_data = {
-        "title": "Automating My Life with Python (PromoBot Phase 1)",
-        "body": """
-        # Hello World!
-        
-        This post was created automatically by my custom tool, **PromoBot**.
-        
-        ## Architecture
-        - **Language:** Python 3.11
-        - **Pattern:** Strategy Pattern (Plugins)
-        - **Target:** Dev.to API
-        
-        Stay tuned for Phase 2 where I add AI!
-        """,
-        "tags": ["python", "automation", "learning"]
-    }
+    db = SessionLocal()
 
-    # 2. Instantiate the publisher
-    # In the future, we can loop through a list: [DevtoPublisher(), RedditPublisher()]
-    publisher = DevtoPublisher()
+    print("📝 Creating Campaign in DB...")
+    # 1. Create the Master Idea
+    campaign = Campaign(
+        title="Celery Test Campaign",
+        original_markdown="# Async is cool\n\nThis runs in the background."
+    )
+    db.add(campaign)
+    db.commit()
+    db.refresh(campaign)
 
-    # 3. Execute
-    url = publisher.publish(post_data)
+    # 2. Create the Platform Adaptation
+    post = Post(
+        campaign_id=campaign.id,
+        platform="devto",
+        final_content="# Hello from Celery!\n\nI was processed by a worker.",
+        status="queued"
+    )
+    db.add(post)
+    db.commit()
+    db.refresh(post)
+    
+    print(f"💾 Saved Post #{post.id} to DB (Status: {post.status})")
 
-    if url:
-        print(f"\n✨ Success! View your draft here: {url}")
-    else:
-        print("\n💀 Mission Failed.")
+    # 3. Dispatch the Task!
+    print("🚀 Dispatching to Celery Worker...")
+    task = publish_post_task.delay(post.id)
+    
+    print(f"✅ Task Sent! ID: {task.id}")
+    print("Check your terminal logs to see the worker pick it up.")
+    
+    db.close()
 
 if __name__ == "__main__":
     main()
