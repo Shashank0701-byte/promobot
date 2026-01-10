@@ -45,30 +45,30 @@ class AIEngine:
             return draft
 
     def _build_prompt(self, draft: str, platform: str) -> str:
-        """
-        Factory method to generate specific prompts per platform.
-        """
         if platform == "devto":
             return (
-                f"You are a technical editor. Rewrite the following text as a high-quality "
-                f"Dev.to article. Use Markdown. Add a catchy title at the top with '# '. "
-                f"Keep it technical.\n\n"
-                f"ORIGINAL TEXT:\n{draft}"
+                "You are a technical editor. Rewrite this as a Dev.to article (Markdown). "
+                "Title starts with '# '. Technical and tutorial tone.\n\n"
+                f"ORIGINAL:\n{draft}"
             )
         elif platform == "reddit":
             return (
-                f"You are a Redditor. Rewrite this text to be casual and humble. "
-                f"Use 'I' statements. Keep it under 200 words. "
-                f"CRITICAL RULE: DO NOT INCLUDE ANY URLS, LINKS, OR HTTP ADDRESSES. "
-                f"Plain text only. Do not mention 'Link in comments'.\n\n"
-                f"ORIGINAL TEXT:\n{draft}"
+                "Rewrite this for Reddit (r/SideProject). Casual, humble, 'I' statements. "
+                "Under 200 words. NO LINKS allowed in text.\n\n"
+                f"ORIGINAL:\n{draft}"
             )
-        elif platform == "linkedin":
-             return (
-                f"Rewrite this for LinkedIn. Professional but engaging tone. "
-                f"Focus on the 'achievement' and 'engineering challenges'. "
-                f"Use bullet points and appropriate hashtags.\n\n"
-                f"ORIGINAL TEXT:\n{draft}"
+        elif platform == "twitter":
+            return (
+                "Rewrite this as a viral Tweet. Short, punchy, under 280 characters. "
+                "Use 2-3 relevant hashtags. Emojis allowed. NO LINKS (I will add it later).\n\n"
+                f"ORIGINAL:\n{draft}"
+            )
+        elif platform == "peerlist":
+            return (
+                "Rewrite this for Peerlist.io. Tone: 'Maker/Indie Hacker'. "
+                "Professional but enthusiastic. Focus on 'shipping' and 'building'. "
+                "Short paragraph format. NO LINKS.\n\n"
+                f"ORIGINAL:\n{draft}"
             )
         else:
             return f"Rewrite this text:\n{draft}"
