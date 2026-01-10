@@ -52,14 +52,15 @@ class AIEngine:
             return (
                 f"You are a technical editor. Rewrite the following text as a high-quality "
                 f"Dev.to article. Use Markdown. Add a catchy title at the top with '# '. "
-                f"Keep it technical, use code blocks if implied, and keep the tone helpful/tutorial-like.\n\n"
+                f"Keep it technical.\n\n"
                 f"ORIGINAL TEXT:\n{draft}"
             )
         elif platform == "reddit":
             return (
-                f"You are a Redditor on r/SideProject. Rewrite this text to be casual, humble, "
-                f"and authentic. Use 'I' statements. Remove marketing fluff. "
-                f"Do not use hashtags. Keep it under 200 words.\n\n"
+                f"You are a Redditor. Rewrite this text to be casual and humble. "
+                f"Use 'I' statements. Keep it under 200 words. "
+                f"CRITICAL RULE: DO NOT INCLUDE ANY URLS, LINKS, OR HTTP ADDRESSES. "
+                f"Plain text only. Do not mention 'Link in comments'.\n\n"
                 f"ORIGINAL TEXT:\n{draft}"
             )
         elif platform == "linkedin":

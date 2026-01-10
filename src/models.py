@@ -1,4 +1,3 @@
-# src/models.py
 from sqlalchemy import Column, Integer, String, Text, DateTime, ForeignKey
 from sqlalchemy.sql import func
 from src.database import Base
@@ -20,8 +19,13 @@ class Post(Base):
     campaign_id = Column(Integer, ForeignKey("campaigns.id"))
     
     platform = Column(String) # 'devto', 'reddit'
-    final_content = Column(Text) # The specific markdown for this platform
-    status = Column(String, default="draft") # draft, published
+    
+    # --- THIS WAS MISSING 👇 ---
+    target_audience = Column(String, nullable=True) # e.g. 'r/Python', 'u/MyUser'
+    # ---------------------------
+
+    final_content = Column(Text) 
+    status = Column(String, default="draft") 
     
     published_url = Column(String, nullable=True)
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())
