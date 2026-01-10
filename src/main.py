@@ -1,41 +1,51 @@
-# src/main.py
 from src.database import SessionLocal
 from src.models import Campaign, Post
 from src.tasks import publish_post_task
+from src.ai import AIEngine
 import time
 
 def main():
     db = SessionLocal()
+    ai = AIEngine() # <--- Instantiate the Brain
 
-    print("📝 Creating Campaign in DB...")
-    # 1. Create the Master Idea
-    campaign = Campaign(
-        title="Celery Test Campaign",
-        original_markdown="# Async is cool\n\nThis runs in the background."
-    )
+    # --- Step 1: Input ---
+    print("\n💡 New Campaign Idea: 'PromoBot Launch'")
+    raw_draft = """
+    I built a tool called PromoBot. 
+    It uses Python, Redis, and Celery to automate social media posts.
+    I learned a lot about the Strategy Pattern and Docker.
+    It's open source and I want people to try it.
+    """
+
+    # --- Step 2: The AI Processing ---
+    print("🧠 calling Gemini to generate Dev.to version...")
+    
+    # This is the magic moment - AI writes the code for us
+    devto_content = ai.rewrite(raw_draft, platform="devto")
+    
+    print("\n✨ AI Generated Content Preview:")
+    print("-" * 40)
+    print(devto_content[:200] + "...") # Print first 200 chars
+    print("-" * 40)
+
+    # --- Step 3: Persistence ---
+    campaign = Campaign(title="PromoBot Launch", original_markdown=raw_draft)
     db.add(campaign)
     db.commit()
-    db.refresh(campaign)
 
-    # 2. Create the Platform Adaptation
     post = Post(
         campaign_id=campaign.id,
         platform="devto",
-        final_content="# Hello from Celery!\n\nI was processed by a worker.",
+        final_content=devto_content, # <--- Saving the AI version!
         status="queued"
     )
     db.add(post)
     db.commit()
-    db.refresh(post)
     
-    print(f"💾 Saved Post #{post.id} to DB (Status: {post.status})")
-
-    # 3. Dispatch the Task!
-    print("🚀 Dispatching to Celery Worker...")
+    # --- Step 4: Dispatch ---
+    print(f"🚀 Dispatching AI-written post #{post.id} to Celery...")
     task = publish_post_task.delay(post.id)
-    
     print(f"✅ Task Sent! ID: {task.id}")
-    print("Check your terminal logs to see the worker pick it up.")
     
     db.close()
 

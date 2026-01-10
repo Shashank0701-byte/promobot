@@ -16,6 +16,7 @@ logger = logging.getLogger("PromoBot")
 class Config:
     """Centralized configuration."""
     DEVTO_API_KEY = os.getenv("DEVTO_API_KEY")
+    GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
 
     @classmethod
     def validate(cls):
@@ -23,6 +24,9 @@ class Config:
         if not cls.DEVTO_API_KEY:
             logger.error("❌ Missing DEVTO_API_KEY in .env file")
             raise ValueError("Configuration Error: Missing API Keys")
+        if not cls.GEMINI_API_KEY:
+            logger.error("❌ Missing GEMINI_API_KEY in .env file")
+            raise ValueError("❌ Missing GEMINI_API_KEY")
 
 # Run validation on import to fail fast
 Config.validate()
