@@ -1,4 +1,4 @@
-# PromoBot 🤖🚀
+# PromoBot
 
 **PromoBot** is an autonomous "Marketing Agent" that turns code into content. It reads your project's source code or README and automatically generates and publishes launch posts to **Reddit, Dev.to, Twitter (X), and Peerlist**.
 
@@ -14,7 +14,7 @@ PromoBot follows an Event-Driven, Microservices-like architecture:
 * **Memory:** PostgreSQL (SQLAlchemy) for campaign tracking.
 * **Pattern:** Strategy Pattern (Plugin-based architecture for adding new platforms).
 
-## ✨ Features
+## Features
 
 * **Universal Auth:** Logs into Reddit/X once and saves session state to `secrets/`.
 * **Context Aware:** Reads the `README.md` of any project you are working on.
@@ -24,14 +24,14 @@ PromoBot follows an Event-Driven, Microservices-like architecture:
     * *Twitter:* Short, punchy, hashtag-optimized.
     * *Peerlist:* Professional "Indie Hacker" tone.
 
-## 🛠️ Tech Stack
+## Tech Stack
 
 * **Language:** Python 3.11
 * **Frameworks:** Celery, SQLAlchemy
 * **Infrastructure:** Docker Compose (Redis, Postgres)
 * **Automation:** Playwright
 
-## 🚀 Usage
+## Usage
 
 Navigate to any project folder and run:
 
